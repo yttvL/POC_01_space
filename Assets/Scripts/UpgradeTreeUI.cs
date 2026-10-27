@@ -17,11 +17,13 @@ public class UpgradeTreeUI : MonoBehaviour
     [SerializeField] private UpgradeManager upgrades;
     [SerializeField] private ResourceInventory inventory;
     [SerializeField] private ResourceDefinition displayedResource;
+    // 全局飞船等级。拖 GameSystems 上的 ProgressionState，供顶部 Text 显示 Ship Level。
+    [SerializeField] private ProgressionState progression;
 
     [Header("Hand-built UI")]
     // 默认隐藏的全局 UI Panel；这个脚本本身必须挂在始终 Active 的对象上。
     [SerializeField] private GameObject upgradeTreePanel;
-    // 显示当前资源总量及每秒自动生产速率的 TMP 文本。
+    // 同一段 TMP 文字显示库存、自动生产速率和当前 Ship Level。
     [SerializeField] private TMP_Text autoFarmingText;
     [SerializeField] private Button upgrade01Button;
     [SerializeField] private Button upgrade02Button;
@@ -47,17 +49,18 @@ public class UpgradeTreeUI : MonoBehaviour
 
     /// <summary>
     /// Subscribe to resource and upgrade changes.
-    /// 自动生产会不断 Add(Wood)，事件通知 UI 及时刷新数量；不需要靠每帧重建 UI。
+    /// 自动生产、升级购买和飞船等级变化都通过事件通知 UI；不需要每帧刷新。
     /// </summary>
     private void OnEnable()
     {
         if (inventory != null) inventory.ResourceChanged += OnResourceChanged;
         if (upgrades != null) upgrades.UpgradesChanged += RefreshUI;
+        if (progression != null) progression.ShipLevelChanged += OnShipLevelChanged;
     }
 
     /// <summary>
     /// Populate the initial UI even if the panel starts hidden.
-    /// 确保初始 Wood 数量、生产速率和三颗升级按钮的状态正确显示；UI Panel 此时可以仍然隐藏。
+    /// 初始化显示库存、自动生产速率、飞船等级与三个按钮状态；UI Panel 此时可以仍然隐藏。
     /// </summary>
     private void Start()
     {
@@ -66,12 +69,13 @@ public class UpgradeTreeUI : MonoBehaviour
 
     /// <summary>
     /// Unsubscribe from inventory and upgrade change events.
-    /// 解绑库存变化和升级变化事件。脚本之后重新启用时会在 OnEnable 重新订阅，避免重复刷新。
+    /// 解绑库存、升级和飞船等级变化事件，避免重启组件后重复订阅。
     /// </summary>
     private void OnDisable()
     {
         if (inventory != null) inventory.ResourceChanged -= OnResourceChanged;
         if (upgrades != null) upgrades.UpgradesChanged -= RefreshUI;
+        if (progression != null) progression.ShipLevelChanged -= OnShipLevelChanged;
     }
 
     /// <summary>
@@ -124,7 +128,18 @@ public class UpgradeTreeUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Refresh the rate readout and three fixed button statuses.
+    /// Refresh when spaceship progression changes.
+    /// 飞船等级在升级购买后由 ProgressionState 更新；也可能由未来的存档系统修改。
+    /// 因此 UI 直接监听全局进度事件，不依赖某个特定 Button 的点击结果。
+    /// </summary>
+    /// <param name="newLevel">当前最新的飞船等级。RefreshUI 会重新读取状态。</param>
+    private void OnShipLevelChanged(int newLevel)
+    {
+        RefreshUI();
+    }
+
+    /// <summary>
+    /// Refresh resource count, automatic production rate, spaceship level and three buttons.
     /// 按钮状态由 UpgradeManager 计算；Locked、缺钱、Purchased 都不能点。
     /// 这里不修改产量或库存，避免 UI 与 Gameplay 互相依赖内部字段。
     /// </summary>
@@ -134,33 +149,73 @@ public class UpgradeTreeUI : MonoBehaviour
         if (autoFarmingText != null)
         {
             string resourceName = displayedResource != null ? displayedResource.DisplayName : "Resource";
-            autoFarmingText.text = $"{resourceName}: {inventory.GetAmount(displayedResource)}\nAUTO FARMING: +{upgrades.GetAutoProductionRate():0.##} {resourceName}/s";
+            string shipLevel = progression != null ? progression.ShipLevel.ToString() : "--";
+            autoFarmingText.text =
+                $"{resourceName}: {inventory.GetAmount(displayedResource)}\n" +
+                $"AUTO FARMING: +{upgrades.GetAutoProductionRate():0.##} {resourceName}/s\n" +
+                $"SHIP LEVEL: {shipLevel}";
         }
-        RefreshButton(upgrade01Button, upgrade01Text, UpgradeManager.UpgradeId.AutoProduction, "AUTO FARMING I");
-        RefreshButton(upgrade02Button, upgrade02Text, UpgradeManager.UpgradeId.MiningYield, "MINING YIELD I");
-        RefreshButton(spaceshipUpgradeButton, spaceshipUpgradeText, UpgradeManager.UpgradeId.Spaceship, "SPACESHIP UPGRADE I");
+        RefreshButton(
+            upgrade01Button,
+            upgrade01Text,
+            UpgradeManager.UpgradeId.AutoProduction,
+            "AUTO FARMING I",
+            "1 → 2 WOOD/S"
+        );
+
+        RefreshButton(
+            upgrade02Button,
+            upgrade02Text,
+            UpgradeManager.UpgradeId.MiningYield,
+            "MINING YIELD I",
+            "1 → 2 WOOD/NODE"
+        );
+
+        RefreshButton(
+            spaceshipUpgradeButton,
+            spaceshipUpgradeText,
+            UpgradeManager.UpgradeId.Spaceship,
+            "SPACESHIP UPGRADE I",
+            "UNLOCK PLANET 02"
+        );
     }
 
     /// <summary>
-    /// Display a button state and its current configured Wood cost.
-    /// 不强制改美术图片，只更新 Button.interactable 和可选 TMP_Text。
-    /// 美术替换按钮 Sprite 后，这个方法不影响图片布局。
+    /// Refresh the display and interactability of an upgrade button.
+    /// 更新升级按钮的名称、升级效果以及购买状态。
+    /// 按钮固定显示三行，前两行始终显示，第三行根据升级状态变化。
+    /// 这里只负责 UI，不直接执行资源扣除或升级。
     /// </summary>
-    /// <param name="button">要更新交互状态的 Unity UI Button。</param>
-    /// <param name="label">要更新文案的 TMP 文本；为空时尝试从 Button 子物体查找。</param>
-    /// <param name="id">要查询或购买的升级节点 ID（本周三种之一）。</param>
-    /// <param name="title">按钮对应的显示标题，由 UI 提供。</param>
-    private void RefreshButton(Button button, TMP_Text label, UpgradeManager.UpgradeId id, string title)
+    private void RefreshButton(
+        Button button,
+        TMP_Text label,
+        UpgradeManager.UpgradeId id,
+        string title,
+        string effect)
     {
+        // 从 UpgradeManager 获取当前升级状态和购买条件。
         UpgradeManager.UpgradeState state = upgrades.GetState(id);
         bool canBuy = upgrades.CanAfford(id);
-        if (button != null) button.interactable = canBuy;
-        if (label == null && button != null) label = button.GetComponentInChildren<TMP_Text>(true);
-        if (label == null) return;
-        string status = state == UpgradeManager.UpgradeState.Purchased ? "PURCHASED" :
-                        state == UpgradeManager.UpgradeState.Locked ? "LOCKED" :
-                        $"COST: {upgrades.GetCost(id)} WOOD";
-        label.text = $"{title}\n{status}";
+
+        // 资源不足、前置未解锁或已经购买时，按钮不可点击。
+        if (button != null)
+            button.interactable = canBuy;
+
+        // 如果没有手动指定 TMP Text，就尝试从 Button 子物体寻找。
+        if (label == null && button != null)
+            label = button.GetComponentInChildren<TMP_Text>(true);
+
+        if (label == null)
+            return;
+
+        // 第三行根据状态显示 Locked、Purchased 或购买价格。
+        string status =
+            state == UpgradeManager.UpgradeState.Purchased ? "PURCHASED" :
+            state == UpgradeManager.UpgradeState.Locked ? "LOCKED" :
+            $"COST: {upgrades.GetCost(id)} WOOD";
+
+        // 第一行名称，第二行效果，第三行购买状态。
+        label.text = $"{title}\n{effect}\n{status}";
     }
 
     /// <summary>

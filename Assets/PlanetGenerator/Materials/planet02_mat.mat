@@ -53,7 +53,7 @@ Material:
     - _NormalTiling: 3.9
     - _Radius: 1
     - _RockCoverage: 0.8
-    - _SlopeEnd: 0.053
+    - _SlopeEnd: 0.135
     - _SlopeStart: 0.056
     - _Wrap: 0.12
     m_Colors:
