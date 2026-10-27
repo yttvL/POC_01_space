@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: planet02_mat
+  m_Shader: {fileID: 4800000, guid: 9dd91d4f0ba4fb3468d76c668b272e87, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _RockNormal:
+        m_Texture: {fileID: 2800000, guid: 2739a9f117253a4499fac02420f5fdb1, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AmbientStrength: 0.65
+    - _BaseStrength: 0.079
+    - _ColorBandWidth: 0.05
+    - _ColorWarpStrength: 0.045
+    - _CraterStrength: 0.187
+    - _DebugMode: 0
+    - _FlatNormalStrength: 0.097
+    - _GraphicBandSoftness: 0.024
+    - _GraphicBlend: 1
+    - _GraphicGrainAmount: 0.15
+    - _GraphicGrainPixelSize: 2
+    - _GraphicHighlightThreshold: 0.68
+    - _GraphicNormalInfluence: 0.6
+    - _GraphicShadowThreshold: 0.25
+    - _GraphicTerrainDetail: 0
+    - _HeightHigh: 0.075
+    - _HeightLow: 0
+    - _LightStrength: 1.15
+    - _MountainStrength: 0.129
+    - _NormalBlendSharpness: 4
+    - _NormalStrength: 1.15
+    - _NormalTiling: 3.9
+    - _Radius: 1
+    - _RockCoverage: 0.8
+    - _SlopeEnd: 0.135
+    - _SlopeStart: 0.056
+    - _Wrap: 0.12
+    m_Colors:
+    - _AmbientColor: {r: 0.23999995, g: 0.28999996, b: 0.38999996, a: 1}
+    - _GraphicHighColor: {r: 0.98490566, g: 0.5904845, b: 0.41440365, a: 1}
+    - _GraphicMidColor: {r: 0.7019608, g: 0.23921569, b: 0.3137255, a: 1}
+    - _GraphicShadowColor: {r: 0.23921569, g: 0.15686275, b: 0.20834716, a: 0.9254902}
+    - _HighColor: {r: 0.83, g: 0.74, b: 0.59, a: 1}
+    - _LowColor: {r: 0.12999997, g: 0.16999996, b: 0.19999996, a: 1}
+    - _MidColor: {r: 0.47999996, g: 0.37999994, b: 0.27999997, a: 1}
+    - _RockColor: {r: 0.22999996, g: 0.24999997, b: 0.25999996, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

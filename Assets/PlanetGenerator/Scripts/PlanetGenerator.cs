@@ -140,6 +140,70 @@ public sealed class PlanetGenerator : MonoBehaviour
     }
 
     /// <summary>
+    /// 输入：无（内部随机生成本次 Seed 和地形参数）。
+    /// 输出：更新 Inspector 中的 Seed / FBM / Mountain / Crater 参数，随后调用 Rebuild()。
+    /// 数据流：随机参数 -> heightSettings -> Rebuild() -> CPU 计算高度/梯度 -> Mesh UV2~UV5。
+    ///
+    /// 不随机 Subdivisions：它决定顶点精度与 CPU 重建成本，应该由制作人固定。
+    /// 不随机 Bounds Radius / Material：它们分别属于剔除设置与渲染外观。
+    /// 注意 Rebuild 会解除 bakedMesh 的绑定，但不会修改磁盘上已有的 .asset。
+    /// </summary>
+    [ContextMenu("Random Generate / 随机生成并重建")]
+    public void RandomizeAndRebuild()
+    {
+        // Guid 为每次点击提供不同的初始状态，不依赖或改变 UnityEngine.Random 的全局状态。
+        var rng = new System.Random(Guid.NewGuid().GetHashCode());
+        if (heightSettings == null)
+            heightSettings = new PlanetHeight.Settings();
+
+        seed = rng.Next(1, int.MaxValue);
+
+        // 输入：指定区间的参数随机值。输出：生成器的新参数（均须经 Rebuild 生效）。
+        // 控制范围比字段允许的最大范围更保守，让一键生成的结果通常能直接用作视觉原型。
+        heightSettings.baseFrequency = RandomRange(rng, 1.5f, 3.3f);
+        heightSettings.baseOctaves = rng.Next(3, 6);             // 3~5 层
+        // 顶点较少时限制最高频率，避免高频山脊超过 Mesh 可采样的空间分辨率。
+        heightSettings.mountainFrequency = subdivisions >= 6
+            ? RandomRange(rng, 3.6f, 6.7f)
+            : RandomRange(rng, 3.2f, 5.3f);
+        heightSettings.mountainOctaves = subdivisions >= 6
+            ? rng.Next(3, 6)                                   // 3~5 层
+            : rng.Next(3, 5);                                  // 3~4 层
+        heightSettings.maskFrequency = RandomRange(rng, 1.1f, 2.8f);
+        heightSettings.mountainCoverage = RandomRange(rng, -0.10f, 0.18f);
+
+        // 陨石坑以较小半径为主，减少「一个坑占据星球很大面积」的视觉感受。
+        // Icosphere 细分较低时，太小的坑只有几个顶点，轮廓会变尖/变碎，
+        // 因而依据固定的 Subdivisions 调整随机半径下限，避免细分 5 时抽到过小的坑。
+        heightSettings.craterCount = rng.Next(32, 61);          // 32~60 个
+        if (subdivisions >= 6)
+            heightSettings.craterMinRadius = RandomRange(rng, 0.055f, 0.085f);
+        else if (subdivisions >= 5)
+            heightSettings.craterMinRadius = RandomRange(rng, 0.075f, 0.100f);
+        else
+            heightSettings.craterMinRadius = RandomRange(rng, 0.12f, 0.16f);
+
+        heightSettings.craterMaxRadius = RandomRange(rng,
+            Mathf.Max(heightSettings.craterMinRadius + 0.045f, 0.125f),
+            Mathf.Max(heightSettings.craterMinRadius + 0.070f, 0.185f));
+
+        Rebuild();
+        Debug.Log($"[Planet Generator] Random Generate / 随机生成完成：Seed={seed}，" +
+                  $"Craters={heightSettings.craterCount}，" +
+                  $"Radius={heightSettings.craterMinRadius:F3}~{heightSettings.craterMaxRadius:F3}。" +
+                  "Material and subdivisions unchanged / 材质和细分未修改。", this);
+    }
+
+    /// <summary>
+    /// 输入：System.Random 与范围 [min,max]。输出：指定范围内均匀分布的浮点值。
+    /// 这是 CPU 编辑阶段的参数随机化，不是 3D Terrain Noise。
+    /// </summary>
+    private static float RandomRange(System.Random rng, float min, float max)
+    {
+        return min + (max - min) * (float)rng.NextDouble();
+    }
+
+    /// <summary>
     /// 输入：新的 Seed。输出：更新 Seed 并重新计算 UV2~UV5 数据。
     /// 这是昂贵操作，适用于编辑器修改或偶发的星球生成，不适合每帧调用。
     /// </summary>

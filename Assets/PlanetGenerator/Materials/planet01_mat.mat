@@ -33,17 +33,17 @@ Material:
     - _BaseStrength: 0.056
     - _ColorBandWidth: 0.05
     - _ColorWarpStrength: 0.045
-    - _CraterStrength: 0.111
+    - _CraterStrength: 0.052
     - _DebugMode: 0
     - _FlatNormalStrength: 0.12
     - _GraphicBandSoftness: 0.024
     - _GraphicBlend: 1
-    - _GraphicGrainAmount: 0.085
+    - _GraphicGrainAmount: 0.15
     - _GraphicGrainPixelSize: 2
     - _GraphicHighlightThreshold: 0.68
     - _GraphicNormalInfluence: 0.6
     - _GraphicShadowThreshold: 0.25
-    - _GraphicTerrainDetail: 0.52
+    - _GraphicTerrainDetail: 0
     - _HeightHigh: 0.075
     - _HeightLow: 0
     - _LightStrength: 1.15
@@ -53,14 +53,14 @@ Material:
     - _NormalTiling: 3.9
     - _Radius: 1
     - _RockCoverage: 0.8
-    - _SlopeEnd: 0.28
+    - _SlopeEnd: 0.01
     - _SlopeStart: 0.04
     - _Wrap: 0.12
     m_Colors:
     - _AmbientColor: {r: 0.23999995, g: 0.28999996, b: 0.38999996, a: 1}
-    - _GraphicHighColor: {r: 1, g: 0.75, b: 0.31, a: 1}
-    - _GraphicMidColor: {r: 0.82, g: 0.27, b: 0.04, a: 1}
-    - _GraphicShadowColor: {r: 0.035, g: 0.012, b: 0.006, a: 1}
+    - _GraphicHighColor: {r: 0.85609955, g: 0.95686275, b: 0.7137255, a: 1}
+    - _GraphicMidColor: {r: 0.36078432, g: 0.60784316, b: 0.6039216, a: 1}
+    - _GraphicShadowColor: {r: 0.16470589, g: 0.15686275, b: 0.23921569, a: 0.9254902}
     - _HighColor: {r: 0.83, g: 0.74, b: 0.59, a: 1}
     - _LowColor: {r: 0.12999997, g: 0.16999996, b: 0.19999996, a: 1}
     - _MidColor: {r: 0.47999996, g: 0.37999994, b: 0.27999997, a: 1}
