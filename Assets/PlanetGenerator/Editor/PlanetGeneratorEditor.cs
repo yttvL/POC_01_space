@@ -79,6 +79,18 @@ public sealed class PlanetGeneratorEditor : Editor
                 "This Material does not expose the Planet terrain properties. / " +
                 "当前材质没有 Planet 地形属性，请检查所选 Shader。", MessageType.Warning);
 
+        // 当坑的最小半径低于当前球体采样分辨率，提示用户不要把锯齿误认成 Noise 参数问题。
+        var settings = serializedObject.FindProperty("heightSettings");
+        float minCraterRadius = settings.FindPropertyRelative("craterMinRadius").floatValue;
+        int subdivisions = serializedObject.FindProperty("subdivisions").intValue;
+        if ((subdivisions <= 4 && minCraterRadius < 0.12f) ||
+            (subdivisions == 5 && minCraterRadius < 0.075f) ||
+            (subdivisions >= 6 && minCraterRadius < 0.045f))
+            EditorGUILayout.HelpBox(
+                "Small craters may have too few vertices. Raise Subdivisions if crater rims look jagged. / " +
+                "小陨石坑可能缺少足够顶点；如果边缘锯齿明显，请提高球体细分。",
+                MessageType.Warning);
+
         EditorGUILayout.Space(4);
         EditorGUILayout.HelpBox(
             "Seed / Noise / Crater Distribution / Subdivisions -> Rebuild. / " +
@@ -88,7 +100,19 @@ public sealed class PlanetGeneratorEditor : Editor
             "This component never creates or resets Materials. / 本组件不会创建或重置材质。",
             MessageType.Info);
 
-        if (GUILayout.Button("1. Rebuild Mesh / 重新生成网格", GUILayout.Height(28)))
+        if (GUILayout.Button("1. Random Generate / 随机生成并重建", GUILayout.Height(28)))
+        {
+            // 输入：当前的 Subdivisions（不变）；输出：新的地形随机参数 + 新的临时 Mesh。
+            // Undo 先记录旧对象和 MeshFilter 引用，方便组员撤回数值更改。
+            Undo.RecordObject(generator, "Random Generate Planet Terrain");
+            var filter = generator.GetComponent<MeshFilter>();
+            Undo.RecordObject(filter, "Assign Random Generated Planet Mesh");
+            generator.RandomizeAndRebuild();
+            EditorUtility.SetDirty(generator);
+            SceneView.RepaintAll();
+        }
+
+        if (GUILayout.Button("2. Rebuild Mesh / 重新生成网格", GUILayout.Height(28)))
         {
             // 输入：当前 Inspector 里的生成参数。
             // 输出：新的临时 Mesh（改变 UV2~UV5），不会改 Material。
@@ -100,17 +124,27 @@ public sealed class PlanetGeneratorEditor : Editor
             SceneView.RepaintAll();
         }
 
-        if (GUILayout.Button("2. Bake Mesh Asset / 烘焙网格资产", GUILayout.Height(28)))
+        if (GUILayout.Button("3. Bake Mesh Asset / 烘焙网格资产", GUILayout.Height(28)))
         {
             // 输入：CurrentMesh（CPU 预计算过的球体 + 高度/梯度）。
             // 输出：Project 中的新 Mesh .asset，并由 Generator 引用它。
             if (generator.CurrentMesh == null)
                 generator.Rebuild();
+            // 默认保存到 PlanetGenerator/Bake Mesh；如果新组员还没建文件夹则自动建立。
+            // 仅影响保存窗口的起始位置，不修改已存在的烘焙资产。
+            const string bakeFolder = "Assets/PlanetGenerator/BakedMesh";
+            string defaultFolder = "Assets";
+            if (AssetDatabase.IsValidFolder("Assets/PlanetGenerator"))
+            {
+                if (!AssetDatabase.IsValidFolder(bakeFolder))
+                    AssetDatabase.CreateFolder("Assets/PlanetGenerator", "BakedMesh");
+                defaultFolder = bakeFolder;
+            }
             string path = EditorUtility.SaveFilePanelInProject(
                 "Bake Planet Generator Mesh / 保存星球网格",
                 "PlanetGenerator_Baked", "asset",
                 "Save the precomputed Mesh data (UV2-UV5). / 保存预计算高度和梯度数据。",
-                "Assets/PlanetGenerator/BakedMesh");
+                defaultFolder);
             if (!string.IsNullOrEmpty(path))
             {
                 path = AssetDatabase.GenerateUniqueAssetPath(path);

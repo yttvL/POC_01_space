@@ -39,9 +39,9 @@ Shader "MajorStudio/Planet"
         // 原有 Geometry、Height/Slope Colors、Triplanar Normal 参数保持不变。
         [Header(Graphic Poster Shading)]
         _GraphicBlend("Graphic Mode Blend 0 Original 1 Graphic", Range(0, 1)) = 1
-        [HDR] _GraphicShadowColor("Graphic Shadow Ink", Color) = (0.035, 0.012, 0.006, 1)
-        [HDR] _GraphicMidColor("Graphic Mid Orange", Color) = (0.82, 0.27, 0.040, 1)
-        [HDR] _GraphicHighColor("Graphic Highlight Gold", Color) = (1.00, 0.75, 0.31, 1)
+        _GraphicShadowColor("Graphic Shadow Ink", Color) = (0.035, 0.012, 0.006, 1)
+        _GraphicMidColor("Graphic Mid Orange", Color) = (0.82, 0.27, 0.040, 1)
+        _GraphicHighColor("Graphic Highlight Gold", Color) = (1.00, 0.75, 0.31, 1)
         _GraphicShadowThreshold("Graphic Shadow To Mid", Range(0, 1)) = 0.25
         _GraphicHighlightThreshold("Graphic Mid To Highlight", Range(0, 1)) = 0.68
         _GraphicBandSoftness("Graphic Transition Softness", Range(0.001, 0.2)) = 0.024
