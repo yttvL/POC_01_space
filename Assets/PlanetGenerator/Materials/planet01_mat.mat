@@ -58,8 +58,8 @@ Material:
     - _Wrap: 0.12
     m_Colors:
     - _AmbientColor: {r: 0.23999995, g: 0.28999996, b: 0.38999996, a: 1}
-    - _GraphicHighColor: {r: 0.85609955, g: 0.95686275, b: 0.7137255, a: 1}
-    - _GraphicMidColor: {r: 0.36078432, g: 0.60784316, b: 0.6039216, a: 1}
+    - _GraphicHighColor: {r: 0.82988435, g: 1, b: 0.5943395, a: 1}
+    - _GraphicMidColor: {r: 0.30760244, g: 0.64779866, b: 0.6423987, a: 1}
     - _GraphicShadowColor: {r: 0.16470589, g: 0.15686275, b: 0.23921569, a: 0.9254902}
     - _HighColor: {r: 0.83, g: 0.74, b: 0.59, a: 1}
     - _LowColor: {r: 0.12999997, g: 0.16999996, b: 0.19999996, a: 1}
